@@ -28,11 +28,14 @@ function render(element, container) {
     //checks if props is not children
     const isProperty = (key) => { return key !== 'children' }
 
-    Object.keys(element.props)
-        .filter(isProperty)
-        .forEach(name => {
-            dom[name] = element.props[name];
-        })
+
+    if (element.id != 'root') {
+        Object.keys(element.props)
+            .filter(isProperty)
+            .forEach(name => {
+                dom[name] = element.props[name];
+            })
+    }
 
     element.props.children.forEach(child =>
         render(child, dom)
@@ -42,15 +45,6 @@ function render(element, container) {
 }
 
 
+const Spec = { createElement, createTextElement, render };
 
-const Spec = { createElement };
-
-console.log("started script");
-
-let inner = Spec.createElement('div', { class: 'red' });
-let root = Spec.createElement('div', { class: 'blue' }, inner);
-
-let par = document.getElementById('root');
-
-render(root, par);
-
+export { Spec };
