@@ -1,3 +1,10 @@
+/* element, textElement
+{
+    type : element type,
+    props : props
+}
+*/
+
 //creates a standard object for an element
 function createElement(type, props, ...children) {
   return {
@@ -11,6 +18,8 @@ function createElement(type, props, ...children) {
     }
   };
 }
+
+//cretes text element (will be handled somewhat differently textNode will be created instead of normal element)
 function createTextElement(text) {
   return {
     type: "TEXT_ELEMENT",
@@ -23,21 +32,20 @@ function createTextElement(text) {
 
 //creates dom nodes from fibers
 function createDom(fiber) {
-  const dom = element.type === 'TEXT_ELEMENT' ? document.createTextNode("") : document.createElement(fiber.type);
+  const dom = fiber.type === 'TEXT_ELEMENT' ? document.createTextNode("") : document.createElement(fiber.type);
 
   //checks if props is not children
   const isProperty = key => {
     return key !== 'children';
   };
-  if (element.id != 'root') {
-    Object.keys(fiber.props).filter(isProperty).forEach(name => {
-      dom[name] = element.props[name];
-    });
-  }
+  Object.keys(fiber.props).filter(isProperty).forEach(name => {
+    dom[name] = fiber.props[name];
+  });
   return dom;
 }
 let nextUnitOfWork = null;
 function render(element, container) {
+  //simple fiber
   nextUnitOfWork = {
     dom: container,
     props: {
@@ -45,6 +53,7 @@ function render(element, container) {
     }
   };
 }
+let print = false;
 function workLoop(deadline) {
   let shouldYield = false;
   while (nextUnitOfWork && !shouldYield) {
@@ -55,17 +64,20 @@ function workLoop(deadline) {
 }
 requestIdleCallback(workLoop);
 function performUnitOfWork(fiber) {
+  // console.log("working on : ", fiber.props?.class);
+
   if (!fiber.dom) {
     fiber.dom = createDom(fiber);
   }
   if (fiber.parent) {
+    fiber.parentClass = fiber.parent.props?.class || '-1';
     fiber.parent.dom.appendChild(fiber.dom);
   }
   const elements = fiber.props.children;
   let index = 0;
-  let privSibling = null;
+  let prevSibling = null;
 
-  //creates fibres childrens as fibres without dom nodes :)
+  //creates fibres childrens as fibres without dom nodes or fiber tree :)
   while (index < elements.length) {
     const element = elements[index];
     const newfiber = {
@@ -85,7 +97,7 @@ function performUnitOfWork(fiber) {
   if (fiber.child) {
     return fiber.child;
   }
-  let newFiber = fiber;
+  let nextFiber = fiber;
   while (nextFiber) {
     if (nextFiber.sibling) {
       return nextFiber.sibling;
