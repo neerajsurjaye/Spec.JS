@@ -60,12 +60,13 @@ function workLoop(deadline) {
     nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
     shouldYield = deadline.timeRemaining() < 1;
   }
-  requestIdleCallback(workLoop);
+  setTimeout(() => {
+    requestIdleCallback(workLoop);
+    console.log("timeoutran");
+  }, 1000);
 }
 requestIdleCallback(workLoop);
 function performUnitOfWork(fiber) {
-  // console.log("working on : ", fiber.props?.class);
-
   if (!fiber.dom) {
     fiber.dom = createDom(fiber);
   }
