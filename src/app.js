@@ -71,6 +71,57 @@ function render(element, container) {
 }
 
 
+const isEvent = key => key.startsWith("on");
+const isProperty = key => key !== "children" && !isEvent(key); //checks if something is property or children
+const isNew = (prev, next) => key => prev[key] !== next[key];
+/*
+    isNew = (prev , next) =>{
+        return (key) => {
+            return prev[key] !== next[key];
+        }
+    }
+*/
+const isGone = (prev, next) => key => !(key in next);
+
+
+function updateDom(dom, prevProps, nextProps) {
+
+    //removing event listners
+    Object.keys(prevProps)
+        .filter(isEvent)
+        .filter(key => !(key in nextProps) || isNew(prevProps, nextProps)(key))   //if new or not in next props
+        .forEach(name => {
+            const eventType = name.toLowerCase.subString(2);
+            dom.removeEventListner(eventType, prevProps[name]);
+        })
+
+    //adding new event listners
+    Object.keys(nextProps)
+        .filter(isEvent)
+        .filter(isNew(prevProps, nextProps))
+        .forEach(name => {
+            const eventType = name.toLowerCase.subString(2);
+            dom.addEventListner(eventType, nextProps[name])
+        })
+
+    //reomving old properties
+    Object.keys(prevProps)
+        .filter(isProperty)
+        .filter(isGone(prevProps, nextProps))
+        .forEach(name => {
+            dom[name] = ""
+        })
+
+    //setting or changing properties
+    Object.keys(nextProps)
+        .filter(isProperty)
+        .filter(isNew(prevProps, nextProps))
+        .forEach(name => {
+            dom[name] = nextProps[name]
+        })
+
+}
+
 function commitRoot() {
     deletions.forEach(commitWork);
     commitWork(wipRoot.child);
